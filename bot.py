@@ -45,7 +45,7 @@ scheduler.add_job(daily_reset_task, "cron", hour=0, minute=0)
 
 
 name ="""
- BY CODEFLIX BOTS
+ BY MOVIES8777 BOTS
 """
 
 def get_indian_time():

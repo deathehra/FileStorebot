@@ -47,6 +47,11 @@ async def start_command(client: Client, message: Message):
         except:
             pass
 
+    # ✅ Check Force Subscription
+    if not await is_subscribed(client, user_id):
+        #await temp.delete()
+        return await not_joined(client, message)
+
     # Check if user is banned
     banned_users = await db.get_ban_users()
     if user_id in banned_users:
@@ -57,11 +62,6 @@ async def start_command(client: Client, message: Message):
                 [[InlineKeyboardButton("Contact Support", url=BAN_SUPPORT)]]
             )
         )
-
-    # ✅ Check Force Subscription
-    if not await is_subscribed(client, user_id):
-        #await temp.delete()
-        return await not_joined(client, message)
 
     # File auto-delete time in seconds (Set your desired time in seconds here)
     FILE_AUTO_DELETE = await db.get_del_timer()  # Example: 3600 seconds (1 hour)

@@ -51,7 +51,6 @@ async def start_command(client: Client, message: Message):
 
     # ✅ Check Force Subscription
     if not await is_subscribed(client, user_id):
-        #await temp.delete()
         return await not_joined(client, message)
 
     # Check if user is banned
@@ -65,31 +64,32 @@ async def start_command(client: Client, message: Message):
             )
         )
 
-    # File auto-delete time in seconds (Set your desired time in seconds here)
-    FILE_AUTO_DELETE = await db.get_del_timer()             # Example: 3600 seconds (1 hour)
+    # File auto-delete time
+    FILE_AUTO_DELETE = await db.get_del_timer()
 
+    # ✅👇 Move this part *inside* the function
+    text = message.text
 
-text = message.text
+    if len(text) > 7:
+        # Token verification 
+        verify_status = await db.get_verify_status(id)
 
-if len(text) > 7:
-    # Token verification 
-    verify_status = await db.get_verify_status(id)
+        if SHORTLINK_URL or SHORTLINK_API:
+            # expire check
+            if verify_status['is_verified'] and VERIFY_EXPIRE < (time.time() - verify_status['verified_time']):
+                await db.update_verify_status(user_id, is_verified=False)
 
-    if SHORTLINK_URL or SHORTLINK_API:
-        # expire check
-        if verify_status['is_verified'] and VERIFY_EXPIRE < (time.time() - verify_status['verified_time']):
-            await db.update_verify_status(user_id, is_verified=False)
+            if "verify_" in message.text:
+                _, token = message.text.split("_", 1)
+                
+                if verify_status['verify_token'] != token:
+                    return await message.reply("⚠️ Invalid token. Please /start again.")
 
-        if "verify_" in message.text:
-            _, token = message.text.split("_", 1)
-            
-            if verify_status['verify_token'] != token:
-                return await message.reply("⚠️ Invalid token. Please /start again.")
+                # ✅ Update verification details
+                await db.update_verify_status(id, is_verified=True, verified_time=time.time())
+                current = await db.get_verify_count(id)
+                await db.set_verify_count(id, current + 1)
 
-            # ✅ Update verification details
-            await db.update_verify_status(id, is_verified=True, verified_time=time.time())
-            current = await db.get_verify_count(id)
-            await db.set_verify_count(id, current + 1)
 
             # ✅ Show "Get Your Content" button right after verification
             file_param = ""

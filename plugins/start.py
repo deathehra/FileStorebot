@@ -68,25 +68,24 @@ async def start_command(client: Client, message: Message):
     # File auto-delete time in seconds (Set your desired time in seconds here)
     FILE_AUTO_DELETE = await db.get_del_timer()             # Example: 3600 seconds (1 hour)
 
+text = message.text
 
-       text = message.text
-    
-    if len(text) > 7:
-        # Token verification 
-        verify_status = await db.get_verify_status(id)
-    
-        if SHORTLINK_URL or SHORTLINK_API:
-            # expire check
-            if verify_status['is_verified'] and VERIFY_EXPIRE < (time.time() - verify_status['verified_time']):
-                await db.update_verify_status(user_id, is_verified=False)
-    
-            if "verify_" in message.text:
-                _, token = message.text.split("_", 1)
-                verify_status = await db.get_verify_status(id)
-    
-                if verify_status['verify_token'] != token:
-                    return await message.reply("⚠️ Invalid token. Please /start again.")
-    
+if len(text) > 7:
+    # Token verification 
+    verify_status = await db.get_verify_status(id)
+
+    if SHORTLINK_URL or SHORTLINK_API:
+        # expire check
+        if verify_status['is_verified'] and VERIFY_EXPIRE < (time.time() - verify_status['verified_time']):
+            await db.update_verify_status(user_id, is_verified=False)
+
+        if "verify_" in message.text:
+            _, token = message.text.split("_", 1)
+            verify_status = await db.get_verify_status(id)
+
+            if verify_status['verify_token'] != token:
+                return await message.reply("⚠️ Invalid token. Please /start again.")
+
 
     # ✅ Update verification details
     await db.update_verify_status(id, is_verified=True, verified_time=time.time())

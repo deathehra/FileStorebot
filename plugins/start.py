@@ -113,16 +113,16 @@ else:
 # ✅ Callback for "Get File" button
 @Bot.on_callback_query(filters.regex(r"getfile_(.+)"))
 async def get_file_callback(client, callback_query):
-param = callback_query.data.split("_", 1)[1]
-
-# Notify user
-await callback_query.answer("📂 Fetching your file...", show_alert=False)
-
-# Send the command to trigger file sending logic
-await client.send_message(
-    chat_id=callback_query.from_user.id,
-    text=f"/start {param}"
-)
+    param = callback_query.data.split("_", 1)[1]
+    
+    # Notify user
+    await callback_query.answer("📂 Fetching your file...", show_alert=False)
+    
+    # Send the command to trigger file sending logic
+    await client.send_message(
+        chat_id=callback_query.from_user.id,
+        text=f"/start {param}"
+    )
 
 
 if not verify_status['is_verified'] and not is_premium:

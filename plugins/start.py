@@ -45,49 +45,46 @@ async def start_command(client: Client, message: Message):
     id = message.from_user.id
     is_premium = await is_premium_user(id)
 
-    # Add user if not already present
+    # Add user if not exists
     if not await db.present_user(user_id):
         try:
             await db.add_user(user_id)
         except:
             pass
 
-    # Check Force Subscription
+    # Force Subscribe
     if not await is_subscribed(client, user_id):
         return await not_joined(client, message)
 
-    # Check if user is banned
+    # Banned?
     banned_users = await db.get_ban_users()
     if user_id in banned_users:
         return await message.reply_text(
-            "<b>You are Bᴀɴɴᴇᴅ from using this bot.</b>\n\n"
+            "<b>⛔️ You are Bᴀɴɴᴇᴅ from using this bot.</b>\n\n"
             "<i>Contact support if you think this is a mistake.</i>",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("Contact Support", url=BAN_SUPPORT)]]
             )
         )
 
-    # File auto-delete time in seconds
     FILE_AUTO_DELETE = await db.get_del_timer()
     text = message.text
 
     if len(text) > 7:
-        # Get current verify status
-        verify_status = await get_verify_status(id)
+        verify_status = await db.get_verify_status(id)
 
-        # Token expired check
+        # Token expiry
         if (SHORTLINK_URL or SHORTLINK_API):
             if verify_status['is_verified'] and VERIFY_EXPIRE < (time.time() - verify_status['verified_time']):
-                await update_verify_status(user_id, is_verified=False, verify_token="", original_start="")
+                await db.update_verify_status(user_id, is_verified=False, verify_token="", original_start="")
 
-        # === HANDLE VERIFY TOKEN (User came back after shortlink) ===
+        # === VERIFY TOKEN (User came back after shortlink) ===
         if message.text.startswith("/start verify_"):
             _, token = message.text.split("verify_", 1)
             if verify_status['verify_token'] != token:
                 return await message.reply("Invalid token. Please /start again.")
 
-            # Mark as verified
-            await update_verify_status(
+            await db.update_verify_status(
                 user_id,
                 is_verified=True,
                 verified_time=time.time()
@@ -95,42 +92,34 @@ async def start_command(client: Client, message: Message):
             current = await db.get_verify_count(id)
             await db.set_verify_count(id, current + 1)
 
-            # Get saved original file command
             original_start = verify_status.get('original_start', '')
             if not original_start:
-                return await message.reply("No file associated. Please try again with the original link.")
+                return await message.reply("No file found. Please try again.")
 
-            # "Get File" button with original file link
-            btn = InlineKeyboardMarkup(
-                [
-                    [InlineKeyboardButton("GET FILE", url=f"https://t.me/{client.username}?start={original_start}")]
-                ]
-            )
+            btn = InlineKeyboardMarkup([
+                [InlineKeyboardButton("GET FILE", url=f"https://t.me/{client.username}?start={original_start}")]
+            ])
             return await message.reply(
                 f"Token verified!\nValid for {get_exp_time(VERIFY_EXPIRE)}\n\n"
                 "Click below to get your file",
                 reply_markup=btn
             )
 
-        # === USER NOT VERIFIED & NOT PREMIUM → SHOW SHORTLINK ===
+        # === NOT VERIFIED & NOT PREMIUM → SHOW SHORTLINK ===
         if not verify_status['is_verified'] and not is_premium:
             try:
-                original_cmd = text.split(" ", 1)[1]  # This is the base64 string
-            except IndexError:
-                return await message.reply("Invalid link format.")
+                original_cmd = text.split(" ", 1)[1]
+            except:
+                return await message.reply("Invalid link.")
 
-            # Generate random token
             token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-
-            # Save token + original command
-            await update_verify_status(
+            await db.update_verify_status(
                 user_id,
                 verify_token=token,
                 is_verified=False,
                 original_start=original_cmd  # SAVE ORIGINAL FILE LINK
             )
 
-            # Create verify link
             verify_link = f"https://t.me/{client.username}?start=verify_{token}"
             shortlink = await get_shortlink(SHORTLINK_URL, SHORTLINK_API, verify_link)
 
@@ -147,11 +136,11 @@ async def start_command(client: Client, message: Message):
                 reply_markup=InlineKeyboardMarkup(btn)
             )
 
-        # === USER IS VERIFIED OR PREMIUM → SEND FILE ===
+        # === SEND FILE (VERIFIED OR PREMIUM) ===
         try:
             base64_string = text.split(" ", 1)[1]
-        except IndexError:
-            return await message.reply("Invalid file link.")
+        except:
+            return
 
         string = await decode(base64_string)
         argument = string.split("-")
@@ -163,19 +152,18 @@ async def start_command(client: Client, message: Message):
                 end = int(int(argument[2]) / abs(client.db_channel.id))
                 ids = range(start, end + 1) if start <= end else list(range(start, end - 1, -1))
             except:
-                return await message.reply("Error decoding file range.")
+                return
         elif len(argument) == 2:
             try:
                 ids = [int(int(argument[1]) / abs(client.db_channel.id))]
             except:
-                return await message.reply("Error decoding file ID.")
+                return
 
         temp_msg = await message.reply("<b>Please wait...</b>")
         try:
             messages = await get_messages(client, ids)
-        except Exception as e:
-            await message.reply_text("Something went wrong while fetching files!")
-            print(f"Error: {e}")
+        except:
+            await message.reply_text("Something went wrong!")
             return
         finally:
             await temp_msg.delete()
@@ -184,7 +172,7 @@ async def start_command(client: Client, message: Message):
         for msg in messages:
             caption = (CUSTOM_CAPTION.format(
                 previouscaption="" if not msg.caption else msg.caption.html,
-                filename=msg.document.file_name if msg.document else "Unknown"
+                filename=msg.document.file_name if msg.document else "File"
             ) if CUSTOM_CAPTION and msg.document else
                ("" if not msg.caption else msg.caption.html))
 
@@ -209,15 +197,12 @@ async def start_command(client: Client, message: Message):
                     protect_content=PROTECT_CONTENT
                 )
                 codeflix_msgs.append(copied_msg)
-            except Exception as e:
-                print(f"Failed to copy message: {e}")
+            except:
                 pass
 
-        # Auto Delete Files
         if FILE_AUTO_DELETE > 0:
             notification_msg = await message.reply(
-                f"<b>This file will be deleted in {get_exp_time(FILE_AUTO_DELETE)}. "
-                "Please save or forward it to your saved messages before it gets deleted.</b>"
+                f"<b>File will be deleted in {get_exp_time(FILE_AUTO_DELETE)}. Save it now.</b>"
             )
             await asyncio.sleep(FILE_AUTO_DELETE)
             for snt_msg in codeflix_msgs:
@@ -228,28 +213,22 @@ async def start_command(client: Client, message: Message):
                         pass
             try:
                 reload_url = f"https://t.me/{client.username}?start={text.split(' ', 1)[1]}"
-                keyboard = InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("GET FILE AGAIN!", url=reload_url)]]
-                )
+                keyboard = InlineKeyboardMarkup([
+                    [InlineKeyboardButton("GET FILE AGAIN", url=reload_url)]
+                ])
                 await notification_msg.edit(
-                    "<b>Your video/file is successfully deleted!!\n\n"
-                    "Click below button to get your deleted video/file</b>",
+                    "<b>File deleted!\nClick to get again</b>",
                     reply_markup=keyboard
                 )
-            except Exception as e:
-                print(f"Error updating notification: {e}")
+            except:
+                pass
 
     else:
-        # Normal /start message
-        reply_markup = InlineKeyboardMarkup(
-            [
-                [InlineKeyboardButton("CHANNELS", url="https://t.me/Movies8777")],
-                [
-                    InlineKeyboardButton("ABOUT", callback_data="about"),
-                    InlineKeyboardButton('HELP', callback_data="help")
-                ]
-            ]
-        )
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton("CHANNELS", url="https://t.me/Movies8777")],
+            [InlineKeyboardButton("ABOUT", callback_data="about"),
+             InlineKeyboardButton("HELP", callback_data="help")]
+        ])
         await message.reply_photo(
             photo=START_PIC,
             caption=START_MSG.format(
@@ -262,7 +241,6 @@ async def start_command(client: Client, message: Message):
             reply_markup=reply_markup,
             message_effect_id=5104841245755180586
         )
-
 
 #=====================================================================================##
 

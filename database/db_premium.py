@@ -7,7 +7,32 @@ from datetime import datetime, timedelta
 dbclient = motor.motor_asyncio.AsyncIOMotorClient(DB_URI)
 database = dbclient[DB_NAME]
 collection = database['premium-users']
+verify_collection = database['verify_status']  
 
+# 1. Get verify status
+async def get_verify_status(user_id):
+    user = await verify_collection.find_one({"user_id": user_id})
+    if not user:
+        return {
+            "is_verified": False,
+            "verify_token": "",
+            "verified_time": 0,
+            "original_start": ""
+        }
+    return user
+
+# 2. Update verify status
+async def update_verify_status(user_id, **kwargs):
+    await verify_collection.update_one(
+        {"user_id": user_id},
+        {"$set": kwargs},
+        upsert=True
+    )
+
+# 3. Optional: Reset
+async def reset_verify_status(user_id):
+    await verify_collection.delete_one({"user_id": user_id})
+    
 # Check if the user is a premium user
 async def is_premium_user(user_id):
     user = await collection.find_one({"user_id": user_id})  # Async query

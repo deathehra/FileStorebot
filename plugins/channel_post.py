@@ -38,9 +38,6 @@ async def channel_post(client: Client, message: Message):
 
     await reply_text.edit(f"<b>Here is your link</b>\n\n{link}", disable_web_page_preview = True)
 
-    if not DISABLE_CHANNEL_BUTTON:
-        await post_message.edit_reply_markup(reply_markup)
-
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
 #

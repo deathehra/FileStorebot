@@ -14,6 +14,16 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from database.database import *
 from helper_func import *
 
+def safe_edit(msg, *args, **kwargs):
+    """Safely edit text without MESSAGE_NOT_MODIFIED crashes."""
+    try:
+        return msg.edit_text(*args, **kwargs)
+    except MessageNotModified:
+        pass
+    except Exception:
+        pass
+
+
 @Bot.on_callback_query()
 async def cb_handler(client: Bot, query: CallbackQuery):
     data = query.data

@@ -124,9 +124,9 @@ async def start_command(client: Client, message: Message):
             )
 
             btn = [
-                [InlineKeyboardButton("OPEN LINK", url=shortlink),
-                 InlineKeyboardButton("TUTORIAL", url=TUT_VID)],
-                [InlineKeyboardButton("BUY PREMIUM", callback_data="premium")]
+                [InlineKeyboardButton("Oᴘєη ʟιηк", url=shortlink),
+                 InlineKeyboardButton("Tυтσʀιαℓ", url=TUT_VID)],
+                [InlineKeyboardButton("Bυу Pʀємιυм", callback_data="premium")]
             ]
             return await message.reply(
                 f"Your token has expired. Please refresh to continue..\n\n"
@@ -224,12 +224,19 @@ async def start_command(client: Client, message: Message):
                 pass
 
     else:
-        reply_markup = InlineKeyboardMarkup([
-            [InlineKeyboardButton("CHANNELS", url="https://t.me/Movies8777"),
-             InlineKeyboardButton("CHANNELS", url="https://t.me/+1epnsIzoCx43YTk1")]
-            [InlineKeyboardButton("ABOUT", callback_data="about"),
-             InlineKeyboardButton("HELP", callback_data="help")]
-        ])
+        reply_markup = InlineKeyboardMarkup(
+    [
+        [
+            InlineKeyboardButton("мσνιє'ѕ", url="https://t.me/Movies8777"),
+            InlineKeyboardButton("нєηαтєє", url="https://t.me/+1epnsIzoCx43YTk1")
+        ],
+        [
+            InlineKeyboardButton("ᴀʙᴏᴜᴛ", callback_data="about"),
+            InlineKeyboardButton("ʜᴇʟᴘ", callback_data="help")
+        ]
+    ]
+)
+
         await message.reply_photo(
             photo=START_PIC,
             caption=START_MSG.format(

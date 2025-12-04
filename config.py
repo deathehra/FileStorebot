@@ -36,8 +36,8 @@ FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "120"))  # 0 means no expir
 BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/xenoStudie")
 TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
 #--------------------------------------------
-START_PIC = os.environ.get("START_PIC", "https://i.postimg.cc/bvSb18hx/anmie99.jpg")
-FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.postimg.cc/Dyq7JMH4/anmie.jpg")
+START_PIC = os.environ.get("START_PIC", "https://i.postimg.cc/4yCmP76g/chdyt.jpg")
+FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.postimg.cc/mkwB9tVr/hmhg.jpg")
 
 #--------------------------------------------
 SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "")

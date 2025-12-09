@@ -92,7 +92,7 @@ USER_REPLY_TEXT = "ʙᴀᴋᴋᴀ ! ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴍʏ ꜱᴇɴᴘ
 
 OWNER_TAG = os.environ.get("OWNER_TAG", "𝖫𝗈𝗌𝗍")
 UPI_ID = os.environ.get("UPI_ID", "")
-QR_PIC = os.environ.get("QR_PIC", "")
+QR_PIC = os.environ.get("QR_PIC", "https://image2url.com/images/1765293368028-10fbfce0-7b20-456f-b9eb-cc09ea0fdb22.jpg")
 SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/Goathunterr")
 #--------------------------------------------
 #Time and its price

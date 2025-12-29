@@ -22,7 +22,6 @@ import pytz
 from datetime import datetime
 #rohit_1888 on Tg
 from config import *
-from database.db_premium import *
 from database.database import *
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logging
